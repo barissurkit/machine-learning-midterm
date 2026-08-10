@@ -118,3 +118,126 @@ bunun avantajı, eksik değer doldurma yöntemlerinin yalnızca eğitim verisind
 
 böylece validation ve test verilerinden eğitim aşamasına bilgi sızması önlenmiş olur.
 """
+
+# 5. ÖZNİTELİK ÜRETME (FEATURE ENGINEERING)
+
+df["destek_talebi_var_mi"] = (df["destek_talebi_sayisi"] > 0).astype(int)
+
+
+print("\n" + "=" * 60)
+print("OLUŞTURULAN YENİ ÖZNİTELİK")
+print("=" * 60)
+
+print(
+    df[
+        [
+            "destek_talebi_sayisi",
+            "destek_talebi_var_mi",
+        ]
+    ].head()
+)
+
+# 6. ÖZNİTELİKLERİN VE HEDEF DEĞİŞKENİN AYRILMASI
+
+X = df.drop("churn", axis=1)
+y = df["churn"]
+
+print(f"X'in boyutu: {X.shape}")
+print(f"y'nin boyutu: {y.shape}")
+
+# 7. TRAIN - VALIDATION - TEST AYRIMI
+
+X_train, X_test, y_train, y_test = train_test_split(
+    X, y, test_size=0.3, random_state=42, stratify=y
+)
+X_validation, X_test, y_validation, y_test = train_test_split(
+    X_test, y_test, test_size=0.50, random_state=42, stratify=y_test
+)
+
+print("\n" + "=" * 60)
+print("VERİ SETİ BÖLÜMLERİ")
+print("=" * 60)
+
+print("Train veri sayısı:", len(X_train))
+print("Validation veri sayısı:", len(X_validation))
+print("Test veri sayısı:", len(X_test))
+
+
+print("\nTrain churn dağılımı:")
+print(y_train.value_counts())
+
+print("\nValidation churn dağılımı:")
+print(y_validation.value_counts())
+
+print("\nTest churn dağılımı:")
+print(y_test.value_counts())
+
+# 8. SAYISAL VE KATEGORİK SÜTUNLARIN BELİRLENMESİ
+
+sayisalSutunlar = [
+    "yas",
+    "aylik_gelir",
+    "abonelik_suresi_ay",
+    "destek_talebi_sayisi",
+    "aylik_ucret",
+    "son_giris_gun_once",
+    "destek_talebi_var_mi",
+]
+
+kategorikSutunlar = [
+    "sehir",
+    "uyelik_tipi",
+    "otomatik_odeme",
+]
+
+# 9. PREPROCESSING PIPELINE OLUŞTURMA
+
+
+def createPipeline(model):
+    """
+    verilen model için veri ön işeme ve model eğitim adımların içeren bir Pipeline oluşturmak:
+    """
+
+    # sayısal değişken pipeline'ı
+
+    sayisalPipeline = Pipeline(
+        [  # sayısal sütunlardaki eksik değerleri medyan ile doldurmak:
+            ("imputer", SimpleImputer(strategy="median")),
+            # sayısal değerleri benzer ölçeğe getirmek:
+            ("scaler", StandardScaler()),
+        ]
+    )
+
+    # kategorik değişken pipeline'ı
+    kategorikPipeline = Pipeline(
+        [
+            ("imputer", SimpleImputer(strategy="constant", fill_value="Bilinmiyor"))
+            # kategorik sütunları sayısal sütunlara dönüştürmek:
+            ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False))
+        ]
+    )
+
+    # COLUMN TRANSFORMER
+    # sayısal sütunlara sayısalPipeline,
+    # kategorik sütunlara kategorikPipeline uygulanır.
+
+    preprocessor = ColumnTransformer(
+        [
+            (
+                "numeric",
+                sayisalPipeline,
+                sayisalSutunlar,
+            ),
+            (
+                "categorical",
+                kategorikPipeline,
+                kategorikSutunlar,
+            ),
+        ]
+    )
+
+    # PREPROCESSING + MODEL
+
+    pipeline = Pipeline([("preprocessor", preprocessor), ("model", model)])
+
+    return pipeline
