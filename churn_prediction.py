@@ -211,9 +211,9 @@ def createPipeline(model):
     # kategorik değişken pipeline'ı
     kategorikPipeline = Pipeline(
         [
-            ("imputer", SimpleImputer(strategy="constant", fill_value="Bilinmiyor"))
+            ("imputer", SimpleImputer(strategy="constant", fill_value="Bilinmiyor")),
             # kategorik sütunları sayısal sütunlara dönüştürmek:
-            ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False))
+            ("onehot", OneHotEncoder(handle_unknown="ignore", sparse_output=False)),
         ]
     )
 
@@ -241,3 +241,194 @@ def createPipeline(model):
     pipeline = Pipeline([("preprocessor", preprocessor), ("model", model)])
 
     return pipeline
+
+
+# 10. MODELLERİN TANIMLANMASI
+
+models = {
+    "Logistic Regression": LogisticRegression(
+        max_iter=1000,
+        random_state=42,
+    ),
+    "KNN": KNeighborsClassifier(
+        n_neighbors=5,
+    ),
+}
+
+trainedPipelines = {}  # eğitilmiş pipeline'ların saklanacağı sözlük
+validationScores = {}  # Validation F1 skorlarının saklanacağı sözlük
+
+# 11. MODELLERİN EĞİTİLMESİ VE VALIDATION KARŞILAŞTIRMASI
+
+print("\n" + "=" * 60)
+print("Validation Sonuçları")
+print("\n" + "=" * 60)
+
+
+for modelName, model in models.items():
+    # model için preprocessing + model pipeline'ı oluşturmak
+    pipeline = createPipeline(model)
+
+    # model train verisi üzerinde eğitilir
+
+    pipeline.fit(
+        X_train,
+        y_train,
+    )
+
+    # Validation verisi üzerinde tahmin yapılır:
+    validationPredictions = pipeline.predict(X_validation)
+
+    # validation metrikleri hesaplanır
+    validationAccuracy = accuracy_score(
+        y_validation,
+        validationPredictions,
+    )
+
+    validationPrecision = precision_score(
+        y_validation,
+        validationPredictions,
+        zero_division=0,
+    )
+
+    validationRecall = recall_score(
+        y_validation,
+        validationPredictions,
+        zero_division=0,
+    )
+
+    validationF1 = f1_score(
+        y_validation,
+        validationPredictions,
+        zero_division=0,
+    )
+
+    print(f"\n{modelName}")
+
+    print(f"Accuracy : {validationAccuracy:.4f}")
+
+    print(f"Precision: {validationPrecision:.4f}")
+
+    print(f"Recall   : {validationRecall:.4f}")
+
+    print(f"F1-score : {validationF1:.4f}")
+
+    trainedPipelines[modelName] = pipeline
+
+    validationScores[modelName] = validationF1
+
+# 12. EN İYİ MODELİN SEÇİLMESİ
+
+## validationScores sözlüğündeki en yüksek F1 skoruna sahip model:
+
+bestModelName = max(
+    validationScores,
+    key=validationScores.get,
+)
+
+## ilgili eğitilmiş pipeline'ı al
+bestModel = trainedPipelines[bestModelName]
+
+## model seçimi
+
+print(f"en iyi validation sonucuna sahip model: {bestModelName}")
+
+print(f"Validation F1 score: {round(validationScores[bestModelName], 4)}")
+
+# 13. EN İYİ MODELİN TEST VERİSİNDE DEĞERLENDİRİLMESİ
+
+##NOT: test verisini yalnızca model seçimi tamamlandıktan sonra kullan!
+
+testPredictions = bestModel.predict(X_test)
+
+## test metriklerinin hesaplanması
+
+testAccuracy = accuracy_score(
+    y_test,
+    testPredictions,
+)
+
+testPrecision = precision_score(
+    y_test,
+    testPredictions,
+    zero_division=0,
+)
+
+testRecall = recall_score(
+    y_test,
+    testPredictions,
+    zero_division=0,
+)
+
+testF1 = f1_score(
+    y_test,
+    testPredictions,
+    zero_division=0,
+)
+
+# 14. CONFUSION MATRIX
+
+testConfusionMatrix = confusion_matrix(y_test, testPredictions)
+
+print("\n" + "=" * 60)
+print("TEST SONUÇLARI")
+print("=" * 60)
+
+print("Model:", bestModelName)
+
+print(f"Accuracy : {testAccuracy:.4f}")
+
+print(f"Precision: {testPrecision:.4f}")
+
+print(f"Recall   : {testRecall:.4f}")
+
+print(f"F1-score : {testF1:.4f}")
+
+
+print("\nConfusion Matrix:")
+
+print(testConfusionMatrix)
+
+# 15. CLASSIFICATION REPORT
+
+print("\n Classification Report:")
+
+print(
+    classification_report(
+        y_test,
+        testPredictions,
+        zero_division=0,
+    )
+)
+
+# 16. KISA SONUÇ YORUMU
+
+print("\n" + "=" * 60)
+print("SONUÇ YORUMU")
+print("=" * 60)
+
+print(f"Validation sonuçlarına göre en başarılı model {bestModelName} oldu.")
+
+
+if bestModelName == "Logistic Regression":
+    print(
+        "Logistic Regression modelinin daha başarılı olmasının "
+        "nedeni, veri setindeki churn ile özellikler arasındaki "
+        "ilişkilerin büyük bölümünün doğrusal olarak ayrılabilir "
+        "olması olabilir."
+    )
+
+else:
+    print(
+        "KNN modelinin daha başarılı olmasının nedeni, benzer "
+        "müşteri özelliklerine sahip müşterilerin benzer churn "
+        "davranışları göstermesi olabilir. \n"
+    )
+    print(
+        f"Seçilen model test verisinde {testF1:.4f} F1-score elde etti. "
+        "Model genel olarak müşterileri ayırabilse de churn olan müşterileri "
+        "tespit etme oranının geliştirilmesi gerektiği görülmektedir."
+    )
+
+
+print(f"Seçilen model test verisinde {testF1:.4f} F1-score elde etti.")
