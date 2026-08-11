@@ -400,3 +400,35 @@ print(
         zero_division=0,
     )
 )
+
+# 16. KISA SONUÇ YORUMU
+
+print("\n" + "=" * 60)
+print("SONUÇ YORUMU")
+print("=" * 60)
+
+print(f"Validation sonuçlarına göre en başarılı model {bestModelName} oldu.")
+
+
+if bestModelName == "Logistic Regression":
+    print(
+        "Logistic Regression modelinin daha başarılı olmasının "
+        "nedeni, veri setindeki churn ile özellikler arasındaki "
+        "ilişkilerin büyük bölümünün doğrusal olarak ayrılabilir "
+        "olması olabilir."
+    )
+
+else:
+    print(
+        "KNN modelinin daha başarılı olmasının nedeni, benzer "
+        "müşteri özelliklerine sahip müşterilerin benzer churn "
+        "davranışları göstermesi olabilir. \n"
+    )
+    print(
+        f"Seçilen model test verisinde {testF1:.4f} F1-score elde etti. "
+        "Model genel olarak müşterileri ayırabilse de churn olan müşterileri "
+        "tespit etme oranının geliştirilmesi gerektiği görülmektedir."
+    )
+
+
+print(f"Seçilen model test verisinde {testF1:.4f} F1-score elde etti.")
