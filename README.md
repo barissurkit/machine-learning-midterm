@@ -86,3 +86,66 @@ Confusion Matrix:
 ```text
 [[17  2]
  [ 6  5]]
+```
+
+## Teknolojiler
+
+- Python
+- pandas
+- scikit-learn (Pipeline, ColumnTransformer, SimpleImputer, StandardScaler, OneHotEncoder, LogisticRegression, KNeighborsClassifier)
+- pytest (testler)
+
+## Gereksinimler
+
+- Python 3.12 (bu sürümle doğrulandı; güncel `numpy` Python 3.12 ve üzerini gerektirir)
+- `requirements.txt` içindeki paketler: `pandas`, `scikit-learn` (sürümler sabitlenmemiştir; doğrulama pandas 3.0.6 ve scikit-learn 1.9.1 ile yapılmıştır)
+
+## Kurulum
+
+```bash
+git clone https://github.com/barissurkit/machine-learning-midterm.git
+cd machine-learning-midterm
+python -m venv .venv
+source .venv/bin/activate   # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+```
+
+## Kullanım
+
+Betiği repository'nin kök dizininden çalıştırın (`musteri_churn.csv` dosyasını çalışma dizininden okur):
+
+```bash
+python churn_prediction.py
+```
+
+Çıktının sonunda şuna benzer test sonuçları yazdırılır:
+
+```text
+TEST SONUÇLARI
+Model: KNN
+Accuracy : 0.7333
+Precision: 0.7143
+Recall   : 0.4545
+F1-score : 0.5556
+
+Confusion Matrix:
+[[17  2]
+ [ 6  5]]
+```
+
+## Testler
+
+```bash
+pip install pytest
+pytest tests
+```
+
+Testler veri setinin yapısını (sütunlar, 200 satır, ikili hedef değişken, eksik değer sütunları) ve betiğin uçtan uca çalışmasını (70/15/15 bölme boyutları, iki modelin karşılaştırılması, test metrikleri ve confusion matrix) doğrular.
+
+## Katkı
+
+Katkı rehberi için [CONTRIBUTING.md](CONTRIBUTING.md) dosyasına bakın.
+
+## Lisans
+
+[MIT](LICENSE)
